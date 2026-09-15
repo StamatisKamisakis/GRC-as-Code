@@ -8,19 +8,19 @@ import psutil
 # ---------------------------------------------------------
 # ISO 42001 Control A.6.2 - AI System Performance Baseline
 # ---------------------------------------------------------
-# Καθορισμός Ορίων Ασφαλείας (Policy Thresholds)
-MAX_CPU_PERCENT = 85.0   # Μέγιστη επιτρεπόμενη χρήση CPU (%)
-MAX_RAM_PERCENT = 90.0   # Μέγιστη επιτρεπόμενη χρήση RAM (%)
+# Security Policy Thresholds
+MAX_CPU_PERCENT = 85.0   # Maximum allowed CPU usage (%)
+MAX_RAM_PERCENT = 90.0   # Maximum allowed RAM usage (%)
 
 def setup_syslog_logger():
     """
-    Σύνδεση του Python script με το Linux Syslog / journalctl
-    για να τηρείται το ISO audit trail (Traceability).
+    Configures Python syslog integration for Linux systemd/journalctl
+    to maintain an immutable ISO audit trail (Traceability).
     """
     logger = logging.getLogger("ISO42001-Monitor")
     logger.setLevel(logging.INFO)
     
-    # Επιλογή syslog socket ανάλογα με το OS
+    # Identify the appropriate Linux syslog socket
     syslog_address = '/dev/log' if os.path.exists('/dev/log') else '/var/run/syslog'
     
     try:
@@ -36,7 +36,7 @@ def setup_syslog_logger():
 
 def check_ai_system_health(logger):
     """
-    Συλλογή metrics και έλεγχος συμμόρφωσης με τα όρια.
+    Collects system performance metrics and verifies ISO 42001 compliance thresholds.
     """
     cpu_usage = psutil.cpu_percent(interval=1)
     ram_usage = psutil.virtual_memory().percent
@@ -44,17 +44,17 @@ def check_ai_system_health(logger):
     compliance_status = "COMPLIANT"
     violations = []
 
-    # Έλεγχος CPU
+    # CPU threshold evaluation
     if cpu_usage > MAX_CPU_PERCENT:
         compliance_status = "NON-COMPLIANT"
         violations.append(f"High CPU Usage: {cpu_usage}% (Limit: {MAX_CPU_PERCENT}%)")
 
-    # Έλεγχος RAM
+    # RAM threshold evaluation
     if ram_usage > MAX_RAM_PERCENT:
         compliance_status = "NON-COMPLIANT"
         violations.append(f"High RAM Usage: {ram_usage}% (Limit: {MAX_RAM_PERCENT}%)")
 
-    # Καταγραφή Αποτελεσμάτων
+    # Construct log payload
     log_payload = f"Control A.6.2 Check | Status: {compliance_status} | CPU: {cpu_usage}% | RAM: {ram_usage}%"
 
     if compliance_status == "COMPLIANT":
